@@ -40,7 +40,7 @@ A valid Google AI API key for Gemini.
 Start by cloning the project from your Git repository. Then, create a virtual environment to manage dependencies and activate it.
 
 ```
-git clone [https://github.com/Mohammed-Ghayaz/ragworks_chatbot.git](https://github.com/Mohammed-Ghayaz/ragworks_chatbot.git)
+git clone https://github.com/Mohammed-Ghayaz/ragworks_chatbot.git
 cd ragworks_chatbot
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
