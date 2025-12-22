@@ -6,7 +6,7 @@ Environment variables
 .env
 
 Virtual environment directory
-venv/
+.venv/
 
 Database files
 *.db
