@@ -57,6 +57,15 @@ async def stream_answer(
     Else provide a proper response with citations. Provide the citations in [filename: chunk_index] format.
     If the user message is a greeting or casual conversation (e.g., hi, hello, thanks), you may respond normally without using the retrieved context.
 
+    Safety Rules:
+    - If the user query or the retrieved context involves illegal, harmful, violent,
+    hateful, sexual exploitation, self-harm, or otherwise unethical content,
+    you must refuse to answer.
+    - When refusing, respond with a brief, neutral message such as:
+    "I can’t help with that request."
+    - Do not provide explanations, alternatives, or additional details.
+    - Do not continue the discussion on that topic.
+
     Conversation Summary:
     {history_summary}
 
