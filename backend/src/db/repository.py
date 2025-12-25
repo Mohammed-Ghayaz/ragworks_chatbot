@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from .models import Message, MessageRole
+from .models import Message, MessageRole, Conversation
 from uuid import UUID
 
 async def fetch_history(db: AsyncSession, conversation_id: str, limit: int = 5):
@@ -39,5 +39,18 @@ async def insert_message(db: AsyncSession, conversation_id: str, message: str, r
         await db.refresh(new_message)
 
     except Exception as e:
+        await db.rollback()
+        raise
+
+async def create_conversation(db: AsyncSession, user_id: str):
+    try:
+        new_conversation = Conversation(user_id=UUID(user_id))
+        db.add(new_conversation)
+        await db.commit()
+        await db.refresh(new_conversation)
+
+        return new_conversation.conversation_id
+    
+    except Exception:
         await db.rollback()
         raise
