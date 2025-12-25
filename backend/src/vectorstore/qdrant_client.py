@@ -1,5 +1,7 @@
 from qdrant_client import models, AsyncQdrantClient
 import os
+import time
+import logging
 from dotenv import load_dotenv
 from ..core.config import EMBEDDING_DIM, TOP_K, MAX_TOP_K
 from typing import List
@@ -13,6 +15,8 @@ qdrant_client = AsyncQdrantClient(
     url=qdrant_url, 
     api_key=qdrant_api_key,
 )
+
+retrieval_logger = logging.getLogger("ragworks.retrieval")
 
 async def create_collection(conversation_id: str) -> None:
     collection_name = f"conversation_{conversation_id}__emb_v1"
@@ -50,11 +54,18 @@ async def similarity_search(conversation_id: str, query_embedding: List[float], 
     collection_name = f"conversation_{conversation_id}__emb_v1"
     top_k = min(top_k, MAX_TOP_K)
 
-    hits = await qdrant_client.query_points(
+    retrieval_logger.info("Retrieval Started")
+    start = time.perf_counter()
+
+    result = await qdrant_client.query_points(
         collection_name=collection_name,
         query=query_embedding,
         limit=top_k,
-    ).points
+    )
+
+    hits = result.points
+    end = time.perf_counter()
+    retrieval_logger.info(f"Retrieval complete in {((end - start) * 1000):.2f}")
 
     return [
         {
