@@ -3,7 +3,10 @@ from typing import List
 from ..core.config import GEMINI_MODEL
 from ..schemas.message import Message
 import asyncio
-from ..schemas.feedback import Feedback
+import logging
+import time
+
+llm_logger = logging.getLogger("ragworks.llm")
 
 async def summarize_history(history: List[Message]) -> str:
     try:
@@ -18,10 +21,16 @@ async def summarize_history(history: List[Message]) -> str:
         Chat History:
         {chat_history}
         """
+        start = time.perf_counter()
+
         response = await llm_client.models.generate_content_async(
             model = GEMINI_MODEL,
             content = summarize_history_prompt
         )
+
+        end = time.perf_counter()
+
+        llm_logger.info(f"Summarized Chat History in {(end - start) * 1000} ms | Summary length: {len(response.text)}")
 
         return response.text
 
@@ -79,6 +88,8 @@ async def stream_answer(
     queue: asyncio.Queue[str | None] = asyncio.Queue()
     loop = asyncio.get_running_loop()
 
+    start = time.perf_counter()
+
     def _blocking_stream():
         try:
             response_stream = llm_client.models.generate_content_stream(
@@ -101,8 +112,18 @@ async def stream_answer(
     asyncio.create_task(asyncio.to_thread(_blocking_stream))
 
     # Async consumer
+    ttft = None
+    response = ""
+
     while True:
         item = await queue.get()
         if item is None:
             break
+        if ttft is None:
+            ttft = (time.perf_counter() - start) * 1000
+        response += item
         yield item
+
+    end = (time.perf_counter() - start) * 1000
+
+    llm_logger.info(f"Response Generated in {end:.2f} ms | First chunk in {ttft:.2f} ms | Response Length: {len(response)}")

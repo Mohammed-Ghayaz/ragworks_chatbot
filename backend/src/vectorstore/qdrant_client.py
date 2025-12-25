@@ -65,7 +65,7 @@ async def similarity_search(conversation_id: str, query_embedding: List[float], 
 
     hits = result.points
     end = time.perf_counter()
-    retrieval_logger.info(f"Retrieval complete in {((end - start) * 1000):.2f}")
+    retrieval_logger.info(f"Retrieval complete | Retrieved {len(hits)} chunks in {((end - start) * 1000):.2f}")
 
     return [
         {
