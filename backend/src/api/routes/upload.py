@@ -4,11 +4,12 @@ from ...db.repository import create_conversation
 from ...db.session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...services.ingestion_service import ingest_documents
+from ...utils.auth_dependency import get_current_user
 
 router = APIRouter()
 
 @router.post("/upload")
-async def upload_documents(db: AsyncSession = Depends(get_db), uploaded_files: List[UploadFile] = File(...)):
+async def upload_documents(db: AsyncSession = Depends(get_db), uploaded_files: List[UploadFile] = File(...), user = Depends(get_current_user)):
     try:
         files = []
 
