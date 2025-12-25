@@ -6,8 +6,16 @@ from ...utils.password_hashing import hash_password, verify_password
 from ...utils.jwt import create_access_token
 from ...schemas.auth import RegisterSchema, LoginSchema
 from ...db.repository import get_user_by_email
+from pydantic import BaseModel
+from ...utils.auth_dependency import get_current_user
 
 router = APIRouter()
+
+class ProfileResponse(BaseModel):
+    user_id: str
+    name: str
+    email: str
+
 
 @router.post("/auth/register")
 async def register(user: RegisterSchema, db: AsyncSession = Depends(get_db)):
@@ -37,3 +45,10 @@ async def login(creds: LoginSchema, db: AsyncSession = Depends(get_db)):
 
     return {"access_token": token, "token_type": "bearer"}
 
+@router.get("/auth/me", response_model=ProfileResponse)
+async def get_me(user: User = Depends(get_current_user)):
+    return ProfileResponse(
+        user_id=str(user.user_id),
+        name=user.name,
+        email=user.email
+    )

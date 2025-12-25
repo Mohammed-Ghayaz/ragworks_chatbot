@@ -39,3 +39,18 @@ async def get_current_user(
         )
 
     return user
+
+
+async def decode_and_get_user(db, token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
+        user_id = payload.get("user_id")
+
+        if not user_id:
+            return None
+
+        return await get_user_by_id(db, user_id)
+
+    except JWTError:
+        return None
+

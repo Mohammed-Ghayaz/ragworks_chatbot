@@ -1,12 +1,13 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...schemas.message import Message
 from ...services.rag_service import summarize_history, stream_answer, build_retrieval_query
 from ...services.embedding_service import embed_query
 from ...vectorstore.qdrant_client import similarity_search
 from ...db.models import MessageRole
-from ...db.repository import insert_message, fetch_history
+from ...db.repository import insert_message, fetch_history, get_conversation_by_id
 from ...db.session import get_db
+from ...utils.auth_dependency import decode_and_get_user
 
 router = APIRouter()
 
@@ -14,6 +15,13 @@ router = APIRouter()
 async def chat_with_rag(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     try:
         await websocket.accept()
+        token = websocket.query_params.get("token")
+        user = await decode_and_get_user(db, token)
+
+        if not user:
+            await websocket.close(code=4401)
+            return
+
         while True:
             try:
                 data = await websocket.receive_json()
@@ -23,6 +31,12 @@ async def chat_with_rag(websocket: WebSocket, db: AsyncSession = Depends(get_db)
                 if not conversation_id or not query:
                     await websocket.send_text("conversation_id and message are required.")
                     continue
+
+                conversation = await get_conversation_by_id(db, conversation_id)
+                if conversation.user_id != user.user_id:
+                    await websocket.send_text("Unauthorized user")
+                    await websocket.close(code=4401)
+                    return
 
                 chat_history = await fetch_history(db=db, conversation_id=conversation_id)
 

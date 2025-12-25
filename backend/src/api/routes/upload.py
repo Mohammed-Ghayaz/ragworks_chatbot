@@ -24,7 +24,7 @@ async def upload_documents(db: AsyncSession = Depends(get_db), uploaded_files: L
 
             files.append({"filename": file.filename, "text": text})
 
-        conversation_id = await create_conversation(db=db, user_id="8e5af5a4-96ad-4eb0-9e4e-f019bd2c9c18")
+        conversation_id = await create_conversation(db=db, user_id=user.user_id)
 
         await ingest_documents(conversation_id=conversation_id, files=files)
 

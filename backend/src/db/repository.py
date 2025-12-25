@@ -69,3 +69,34 @@ async def get_user_by_email(db: AsyncSession, email: str):
     
     except Exception:
         raise
+
+
+async def get_user_by_id(db: AsyncSession, user_id: str):
+    try:
+        stmt = (
+            select(User).where(User.user_id == user_id)
+        )
+
+        result = await db.execute(stmt)
+
+        user = result.scalars().first()
+
+        return user
+    
+    except Exception:
+        raise
+
+async def get_conversation_by_id(db: AsyncSession, conversation_id: str):
+    try:
+        stmt = (
+            select(Conversation).where(Conversation.conversation_id == conversation_id)
+        )
+
+        result = await db.execute(stmt)
+
+        convo = result.scalars().first()
+
+        return convo
+    
+    except Exception:
+        raise
