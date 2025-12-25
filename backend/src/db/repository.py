@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from .models import Message, MessageRole, Conversation
+from .models import Message, MessageRole, Conversation, User
 from uuid import UUID
 
 async def fetch_history(db: AsyncSession, conversation_id: str, limit: int = 5):
@@ -53,4 +53,19 @@ async def create_conversation(db: AsyncSession, user_id: str):
     
     except Exception:
         await db.rollback()
+        raise
+
+async def get_user_by_email(db: AsyncSession, email: str):
+    try:
+        stmt = (
+            select(User).where(User.email == email)
+        )
+
+        result = await db.execute(stmt)
+
+        user = result.scalars().first()
+
+        return user
+    
+    except Exception:
         raise
