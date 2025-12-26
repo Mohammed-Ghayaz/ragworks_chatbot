@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
 import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
 
 function Protected({ children }) {
   const { token } = useAuth();
@@ -24,7 +25,8 @@ export default function App() {
         <Navbar />
         <Layout>
           <Routes>
-            <Route path="/" element={<Protected><Upload /></Protected>} />
+            <Route path="/" element={<Protected><Dashboard /></Protected>} />
+            <Route path="/upload" element={<Protected><Upload /></Protected>} />
             <Route path="/chat" element={<Protected><Chat /></Protected>} />
             <Route path="/login" element={<LoginOrRedirect />} />
             <Route path="/register" element={<Register />} />
