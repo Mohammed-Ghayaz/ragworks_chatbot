@@ -1,52 +1,41 @@
 import { useState } from "react";
+import { registerUser } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import Spinner from "../components/Spinner";
 
 export default function Register() {
-  const { login } = useAuth();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const { setToken } = useAuth();
+  const [loading,setLoading]=useState(false);
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
 
-  async function handleRegister(e) {
+  async function submit(e){
     e.preventDefault();
+    setLoading(true);
 
-    const res = await fetch("http://localhost:8000/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-
+    const res = await registerUser(name,email,password);
     const data = await res.json();
 
-    if (res.ok) {
-      login(data.access_token);
-      window.location.href = "/";
-    } else {
-      alert(data.detail || "Registration failed");
-    }
+    setLoading(false);
+
+    if(res.ok){
+      setToken(data.access_token);
+      window.location.href="/";
+    } else alert(data.detail);
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16 bg-white shadow p-6 rounded-xl">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Register</h2>
+    <div className="max-w-md mx-auto mt-16 p-6 bg-white shadow rounded">
+      <h2 className="text-xl font-semibold mb-4">Register</h2>
 
-      <form onSubmit={handleRegister} className="space-y-4">
-        <input className="w-full border p-2 rounded"
-          placeholder="Name"
-          onChange={e => setForm({ ...form, name: e.target.value })}
-        />
+      {loading && <Spinner/>}
 
-        <input className="w-full border p-2 rounded"
-          type="email"
-          placeholder="Email"
-          onChange={e => setForm({ ...form, email: e.target.value })}
-        />
-
-        <input className="w-full border p-2 rounded"
-          type="password"
-          placeholder="Password"
-          onChange={e => setForm({ ...form, password: e.target.value })}
-        />
-
-        <button className="w-full bg-black text-white py-2 rounded-lg">
+      <form onSubmit={submit} className="space-y-4">
+        <input className="w-full border p-2" placeholder="Name" onChange={e=>setName(e.target.value)}/>
+        <input className="w-full border p-2" placeholder="Email" onChange={e=>setEmail(e.target.value)}/>
+        <input type="password" className="w-full border p-2" placeholder="Password" onChange={e=>setPassword(e.target.value)}/>
+        <button className="bg-black text-white w-full py-2 rounded">
           Register
         </button>
       </form>

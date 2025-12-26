@@ -1,19 +1,12 @@
-const API_BASE = "http://localhost:8000";
+const API = "http://localhost:8000";
 
 export async function uploadDocuments(files, token) {
-  const form = new FormData();
+  const formData = new FormData();
+  files.forEach(f => formData.append("uploaded_files", f));
 
-  files.forEach(file => {
-    form.append("uploaded_files", file);
-  });
-
-  const res = await fetch(`${API_BASE}/upload`, {
+  return fetch(`${API}/upload`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: form,
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData
   });
-
-  return res;
 }

@@ -2,28 +2,23 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
-  const { token, logout } = useAuth();
+  const { token, setToken } = useAuth();
 
   return (
-    <nav className="bg-black text-white px-6 py-3 flex justify-between">
-      <Link to="/" className="font-bold text-xl">
-        RAGWorks
-      </Link>
+    <nav className="px-6 py-3 border-b flex justify-between bg-white">
+      <Link to="/" className="font-semibold text-lg">RAGWorks</Link>
 
-      <div className="space-x-4">
-        {token ? (
-          <>
-            <Link to="/upload">Upload</Link>
-            <button onClick={logout} className="underline">
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
+      <div className="space-x-3">
+        {!token && <>
+          <Link to="/login">Login</Link>
+          <Link to="/register">Register</Link>
+        </>}
+
+        {token && <>
+          <Link to="/">Upload</Link>
+          <Link to="/chat">Chat</Link>
+          <button onClick={() => setToken(null)}>Logout</button>
+        </>}
       </div>
     </nav>
   );
