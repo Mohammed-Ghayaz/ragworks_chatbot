@@ -60,7 +60,10 @@ async def chat_with_rag(websocket: WebSocket, db: AsyncSession = Depends(get_db)
                 await insert_message(db, conversation_id, query, "human")
                 await insert_message(db, conversation_id, assistant_reply, "ai")
 
-            except Exception:
+            except Exception as e:
+                import traceback
+                print("CHAT ERROR:", e)
+                traceback.print_exc()
                 await websocket.send_text("Something went wrong, try again.")
 
     except WebSocketDisconnect:

@@ -3,6 +3,7 @@ from typing import List
 import time
 import logging
 from .embedding_service import embed_documents
+import uuid
 from ..vectorstore.qdrant_client import create_collection, upsert_documents
 
 text_splitter = RecursiveCharacterTextSplitter(
@@ -15,9 +16,15 @@ ingestion_logger = logging.getLogger("ragworks.ingestion")
 def chunk_text(text: str) -> List[str]:
     return text_splitter.split_text(text)
 
+
 def generate_vector_ids(conversation_id: str, filename: str, n: int):
-    vector_ids = [f"{conversation_id}__{filename}__chunk_{i}" for i in range(n)]
-    return vector_ids
+    ids = []
+    for i in range(n):
+        key = f"{conversation_id}:{filename}:{i}"
+        uid = uuid.uuid5(uuid.NAMESPACE_DNS, key)
+        ids.append(str(uid))
+    return ids
+
 
 async def ingest_documents(conversation_id: str, files: List[dict]):
     payload = []

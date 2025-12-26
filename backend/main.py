@@ -2,7 +2,8 @@ import logging
 import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from .src.api.routes import auth, chat, upload, conversations
+from src.api.routes import auth, chat, upload, conversations
+from src.db.session import engine, Base
 
 
 app = FastAPI()
@@ -45,6 +46,13 @@ async def log_request_time(request: Request, call_next):
         )
 
     return response
+
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 
 
 # API Routes
