@@ -1,40 +1,26 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
-import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
+      <AuthProvider>
         <Navbar />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
 
-          <Route
-            path="/chat/:conversationId"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
+        <Routes>
+          <Route path="/" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+          <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+          <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
-      </div>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
-
-export default App;

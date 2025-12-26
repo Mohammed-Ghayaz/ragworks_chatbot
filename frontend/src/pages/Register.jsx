@@ -3,92 +3,53 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const { login } = useAuth();
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
   async function handleRegister(e) {
     e.preventDefault();
-    setLoading(true);
 
-    try {
-      const res = await fetch("http://localhost:8000/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password })
-      });
+    const res = await fetch("http://localhost:8000/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) throw new Error(data.detail || "Registration failed");
-
-      // backend already returns JWT
+    if (res.ok) {
       login(data.access_token);
-
-      alert("Account created successfully");
       window.location.href = "/";
-
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
+    } else {
+      alert(data.detail || "Registration failed");
     }
   }
 
   return (
     <div className="max-w-md mx-auto mt-16 bg-white shadow p-6 rounded-xl">
-      <h2 className="text-2xl font-semibold mb-4 text-center">
-        Create Account
-      </h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">Register</h2>
 
       <form onSubmit={handleRegister} className="space-y-4">
-
-        <input
-          type="text"
-          placeholder="Full Name"
-          className="w-full border p-2 rounded"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
+        <input className="w-full border p-2 rounded"
+          placeholder="Name"
+          onChange={e => setForm({ ...form, name: e.target.value })}
         />
 
-        <input
+        <input className="w-full border p-2 rounded"
           type="email"
           placeholder="Email"
-          className="w-full border p-2 rounded"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
+          onChange={e => setForm({ ...form, email: e.target.value })}
         />
 
-        <input
+        <input className="w-full border p-2 rounded"
           type="password"
-          placeholder="Password (min 8 chars)"
-          className="w-full border p-2 rounded"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          minLength={8}
-          required
+          placeholder="Password"
+          onChange={e => setForm({ ...form, password: e.target.value })}
         />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-2 rounded-lg disabled:opacity-60"
-        >
-          {loading ? "Creating account..." : "Register"}
+        <button className="w-full bg-black text-white py-2 rounded-lg">
+          Register
         </button>
       </form>
-      <p className="text-center text-sm mt-3">
-        Already have an account?{" "}
-        <a href="/login" className="text-blue-600 underline">
-          Login
-        </a>
-      </p>
-
     </div>
   );
 }
