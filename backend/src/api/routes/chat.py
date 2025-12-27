@@ -26,6 +26,16 @@ async def chat_with_rag(websocket: WebSocket, db: AsyncSession = Depends(get_db)
             try:
                 data = await websocket.receive_json()
 
+                # allow client to request a clean close of the websocket (e.g., when switching conversations)
+                if data.get("action") == "close":
+                    # acknowledge and close the connection cleanly
+                    try:
+                        await websocket.send_text("closing")
+                    except Exception:
+                        pass
+                    await websocket.close()
+                    return
+
                 conversation_id, query = data.get("conversation_id"), data.get("message")
 
                 if not conversation_id or not query:

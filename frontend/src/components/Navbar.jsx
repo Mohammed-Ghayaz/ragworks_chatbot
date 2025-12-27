@@ -18,7 +18,6 @@ export default function Navbar() {
 
         {token && (
           <>
-            <Link className="text-slate-600 hover:text-slate-800" to="/">Upload</Link>
             <Link className="text-slate-600 hover:text-slate-800" to="/chat">Chat</Link>
             <button
               className="ml-2 px-3 py-1 bg-rose-600 text-white rounded"
@@ -27,7 +26,7 @@ export default function Navbar() {
               Logout
             </button>
           </>
-        )}
+        )} 
       </div>
     </nav>
   );

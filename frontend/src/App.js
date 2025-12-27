@@ -3,11 +3,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
-
 function Protected({ children }) {
   const { token } = useAuth();
   return token ? children : <Navigate to="/login" replace />;
@@ -26,7 +24,6 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Protected><Dashboard /></Protected>} />
-            <Route path="/upload" element={<Protected><Upload /></Protected>} />
             <Route path="/chat" element={<Protected><Chat /></Protected>} />
             <Route path="/login" element={<LoginOrRedirect />} />
             <Route path="/register" element={<Register />} />

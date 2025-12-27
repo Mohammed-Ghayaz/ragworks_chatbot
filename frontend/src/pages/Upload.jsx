@@ -13,17 +13,34 @@ export default function Upload() {
   async function submit() {
     if (files.length === 0) return alert("Please select files to upload");
     setLoading(true);
-    const res = await uploadDocuments(files, token);
-    const data = await res.json();
-    setLoading(false);
 
-    navigate(`/chat?c=${data.conversation_id}`);
+    try {
+      const res = await uploadDocuments(files, token);
+      const data = await res.json();
+      navigate(`/chat?c=${data.conversation_id}`);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Upload failed: " + (err.message || "unknown error"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   function onDrop(e) {
     e.preventDefault();
-    const dropped = Array.from(e.dataTransfer.files);
+    const dropped = Array.from(e.dataTransfer?.files || []).filter(Boolean);
     setFiles((prev) => [...prev, ...dropped]);
+  }
+
+  function onFileInputChange(e) {
+    const selected = Array.from(e.target.files || []).filter(Boolean);
+    setFiles((prev) => [...prev, ...selected]);
+    // clear input value so same file can be chosen again
+    e.target.value = null;
+  }
+
+  function removeFile(index) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   return (
@@ -41,7 +58,7 @@ export default function Upload() {
           <p>Drag & drop files here, or</p>
           <label className="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded cursor-pointer">
             Select files
-            <input className="hidden" type="file" multiple onChange={(e) => setFiles([...files, ...e.target.files])} />
+            <input className="hidden" type="file" multiple onChange={onFileInputChange} />
           </label>
         </div>
 
@@ -50,9 +67,12 @@ export default function Upload() {
             <h4 className="font-semibold">Files to upload</h4>
             <ul className="mt-2 space-y-1">
               {files.map((f, i) => (
-                <li key={i} className="flex items-center justify-between p-2 border rounded">
-                  <div className="text-sm">{f.name}</div>
-                  <div className="text-xs text-slate-500">{Math.round((f.size||0)/1024)} KB</div>
+                <li key={`${f.name}-${f.size}-${i}`} className="flex items-center justify-between p-2 border rounded">
+                  <div className="flex-1 text-sm truncate">{f.name}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs text-slate-500">{Math.round((f.size||0)/1024)} KB</div>
+                    <button type="button" className="text-rose-600 text-xs" onClick={() => removeFile(i)}>Remove</button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -60,10 +80,10 @@ export default function Upload() {
         )}
 
         <div className="mt-4 flex gap-3">
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={submit}>
+          <button type="button" className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={submit} disabled={loading}>
             {loading ? 'Uploading…' : 'Upload & Start Chat'}
           </button>
-          <button className="px-4 py-2 border rounded" onClick={() => setFiles([])}>Clear</button>
+          <button type="button" className="px-4 py-2 border rounded" onClick={() => setFiles([])}>Clear</button>
         </div>
       </div>
     </div>

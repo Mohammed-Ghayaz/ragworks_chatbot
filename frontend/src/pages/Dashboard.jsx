@@ -27,40 +27,26 @@ export default function Dashboard() {
     <div>
       <Hero
         title="RAGWorks — Chat with your documents"
-        subtitle="Upload PDFs, docs or text and start a conversation powered by embeddings and LLMs"
+        subtitle="Go to the conversations"
       >
         <div className="flex gap-2">
-          <button
-            onClick={() => navigate("/")}
-            className="bg-white text-indigo-700 px-4 py-2 rounded font-semibold"
-          >
-            Upload
-          </button>
           <button
             onClick={() => navigate("/chat")}
             className="bg-white/30 text-white px-4 py-2 rounded font-semibold"
           >
-            Open Chat
+            Go to conversations
           </button>
         </div>
       </Hero>
 
       <section className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded shadow">
-          <h3 className="font-semibold mb-3">Quick Upload</h3>
-          <p className="text-sm text-slate-600">Upload files and start a conversation quickly.</p>
-          <div className="mt-4">
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={() => navigate('/')}>Upload Documents</button>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded shadow md:col-span-2">
-          <h3 className="font-semibold mb-3">Recent Conversations</h3>
+        <div className="bg-white p-6 rounded shadow md:col-span-3">
+          <h3 className="font-semibold mb-3">Recent Conversations</h3> 
 
           {loading && <Spinner />}
 
           {!loading && convs.length === 0 && (
-            <p className="text-sm text-slate-600">No conversations yet — upload documents to start.</p>
+            <p className="text-sm text-slate-600">No conversations yet — open the chat and upload documents there to start a conversation.</p>
           )}
 
           <div className="space-y-2">

@@ -23,9 +23,9 @@ async def summarize_history(history: List[Message]) -> str:
         """
         start = time.perf_counter()
 
-        response = await llm_client.models.generate_content_async(
+        response = llm_client.models.generate_content(
             model = GEMINI_MODEL,
-            content = summarize_history_prompt
+            contents = summarize_history_prompt
         )
 
         end = time.perf_counter()

@@ -5,3 +5,9 @@ export async function getConversations(token) {
     headers: { Authorization: `Bearer ${token}` }
   });
 }
+
+export async function getConversationMessages(conversationId, token, limit = 100) {
+  return fetch(`${API}/conversations/${conversationId}/messages?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}

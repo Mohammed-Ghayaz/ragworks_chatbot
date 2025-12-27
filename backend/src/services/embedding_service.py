@@ -8,16 +8,19 @@ from typing import List
 from ..core.config import EMBEDDING_MODEL, EMBEDDING_DIM, EMBEDDING_BATCH_SIZE
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not GEMINI_API_KEY:
-    raise RuntimeError("GEMINI_API_KEY is not set. Set it in environment or .env file")
-
 logger = logging.getLogger(__name__)
 
-embedding_client = genai.Client(api_key=GEMINI_API_KEY)
+if GEMINI_API_KEY:
+    embedding_client = genai.Client(api_key=GEMINI_API_KEY)
+else:
+    # Running without a GEMINI API key (local/dev). Use a deterministic fallback
+    # embedding generator so ingestion and local testing can proceed.
+    embedding_client = None
+    logger.warning("GEMINI_API_KEY is not set; using local deterministic embedding fallback")
 
 
 def _embed_sync(contents: List[str]) -> List[List[float]]:
@@ -27,6 +30,17 @@ def _embed_sync(contents: List[str]) -> List[List[float]]:
     """
     if not isinstance(contents, list):
         raise TypeError("contents must be a list of strings")
+
+    if embedding_client is None:
+        # Deterministic fallback: create simple vector based on sha256 digest of text
+        import hashlib
+        embeddings = []
+        for c in contents:
+            digest = hashlib.sha256(c.encode("utf-8")).digest()
+            # Create EMBEDDING_DIM floats by repeating digest bytes and normalizing
+            vec = [float(digest[i % len(digest)]) / 255.0 for i in range(EMBEDDING_DIM)]
+            embeddings.append(vec)
+        return embeddings
 
     response = embedding_client.models.embed_content(
         model=EMBEDDING_MODEL,
