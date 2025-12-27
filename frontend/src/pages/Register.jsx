@@ -17,13 +17,12 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await registerUser(name, email, password);
-      const data = await res.json();
-
-      if (res.ok) {
-        login(data.access_token);
-        navigate("/", { replace: true });
-      } else alert(data.detail || "Register failed");
+      const data = await registerUser(name, email, password);
+      login(data.access_token);
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Register failed:", err);
+      alert(err.message || "Register failed");
     } finally {
       setLoading(false);
     }

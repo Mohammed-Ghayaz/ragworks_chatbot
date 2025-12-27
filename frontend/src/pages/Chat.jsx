@@ -4,6 +4,7 @@ import { getConversations, getConversationMessages } from "../api/chat";
 import { uploadDocuments } from "../api/upload";
 import Spinner from "../components/Spinner";
 import { useLocation } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function Chat() {
 
@@ -46,10 +47,15 @@ export default function Chat() {
   useEffect(()=>{
     async function load(){
       setLoading(true);
-      const res = await getConversations(token);
-      const data = await res.json();
-      setList(data);
-      setLoading(false);
+      try {
+        const data = await getConversations(token);
+        setList(data);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+        setList([]);
+      } finally {
+        setLoading(false);
+      }
     }
     if(token) load();
   },[token]);
@@ -81,13 +87,8 @@ export default function Chat() {
 
     (async () => {
       try {
-        const res = await getConversationMessages(current, token);
-        if(res && res.ok){
-          const data = await res.json();
-          setMessages(data.map(d => ({ role: d.role, content: d.content })));
-        } else {
-          setMessages([]);
-        }
+        const data = await getConversationMessages(current, token);
+        setMessages(data.map(d => ({ role: d.role, content: d.content })));
       } catch (e) {
         console.error('Failed to load conversation messages', e);
         setMessages([]);
@@ -129,9 +130,22 @@ export default function Chat() {
 
     setConnecting(true);
 
-    const wsUrl = (window.location.hostname === 'localhost')
-      ? `ws://localhost:8000/chat?token=${token}`
-      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/chat?token=${token}`;
+    const backend = API_BASE || process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : null);
+    let wsUrl;
+    if (backend) {
+      try {
+        const url = new URL(backend);
+        const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${protocol}//${url.host}/chat?token=${token}`;
+      } catch (e) {
+        // if parsing fails, fallback to host-based URL
+        wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/chat?token=${token}`;
+      }
+    } else {
+      wsUrl = (window.location.hostname === 'localhost')
+        ? `ws://localhost:8000/chat?token=${token}`
+        : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/chat?token=${token}`;
+    }
 
     const ws = new WebSocket(wsUrl);
 
@@ -145,13 +159,8 @@ export default function Chat() {
 
       (async () => {
         try {
-          const res = await getConversationMessages(convId, token);
-          if(res && res.ok){
-            const data = await res.json();
-            setMessages(data.map(d => ({ role: d.role, content: d.content })));
-          } else {
-            setMessages([]);
-          }
+          const data = await getConversationMessages(convId, token);
+          setMessages(data.map(d => ({ role: d.role, content: d.content })));
         } catch (e) {
           console.error('Failed to load conversation messages', e);
           setMessages([]);
@@ -233,8 +242,7 @@ export default function Chat() {
     setUploading(true);
 
     try {
-      const res = await uploadDocuments(files, token);
-      const data = await res.json();
+      const data = await uploadDocuments(files, token);
       // add to conversation list and connect immediately
       const newId = data.conversation_id;
       const filenames = data.filenames || files.map(f => f.name);

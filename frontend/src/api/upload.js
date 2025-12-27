@@ -1,4 +1,6 @@
-const API = "http://localhost:8000";
+import { API_BASE } from "../config";
+
+const API = API_BASE || process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 export async function uploadDocuments(files, token) {
   if (!token) throw new Error("Not authenticated");
@@ -6,11 +8,16 @@ export async function uploadDocuments(files, token) {
   const formData = new FormData();
   files.forEach((f) => formData.append("uploaded_files", f, f.name));
 
-  const res = await fetch(`${API}/upload`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
+  let res;
+  try {
+    res = await fetch(`${API}/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+  } catch (err) {
+    throw new Error(`Network error: ${err.message}`);
+  }
 
   if (!res.ok) {
     // try to parse JSON error, else return text
@@ -26,5 +33,5 @@ export async function uploadDocuments(files, token) {
     throw new Error(errText || `Upload failed with status ${res.status}`);
   }
 
-  return res;
+  return await res.json().catch(() => null);
 }

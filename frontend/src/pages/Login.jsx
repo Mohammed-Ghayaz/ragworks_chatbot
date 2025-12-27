@@ -16,15 +16,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await loginUser(email, password);
-      const data = await res.json();
-
-      if (res.ok) {
-        login(data.access_token);
-        navigate("/", { replace: true });
-      } else {
-        alert(data.detail || "Login failed");
-      }
+      const data = await loginUser(email, password);
+      login(data.access_token);
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert(err.message || "Login failed");
     } finally {
       setLoading(false);
     }

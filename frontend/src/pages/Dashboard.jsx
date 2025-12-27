@@ -14,10 +14,14 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const res = await getConversations(token);
-      const data = await res.json();
-      setConvs(data);
-      setLoading(false);
+      try {
+        const data = await getConversations(token);
+        setConvs(data);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     load();

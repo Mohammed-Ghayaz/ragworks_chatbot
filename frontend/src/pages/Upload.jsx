@@ -15,9 +15,12 @@ export default function Upload() {
     setLoading(true);
 
     try {
-      const res = await uploadDocuments(files, token);
-      const data = await res.json();
-      navigate(`/chat?c=${data.conversation_id}`);
+      const data = await uploadDocuments(files, token);
+      if (data && data.conversation_id) {
+        navigate(`/chat?c=${data.conversation_id}`);
+      } else {
+        alert('Upload succeeded but no conversation id returned');
+      }
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Upload failed: " + (err.message || "unknown error"));
