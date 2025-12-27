@@ -1,108 +1,209 @@
-# RAGworks Chatbot
-## Project Overview
-This is a full-stack, RAG (Retrieval-Augmented Generation) powered chatbot built as a submission for the RAGworks.ai recruitment process. The application allows users to securely upload PDF documents and engage in conversations with a chatbot that uses the document's content for context.
+# 🧠 RAGWorks Chatbot
 
-The project is built with a modern tech stack, demonstrating key skills in backend development, front-end design, and conversational AI engineering.
+Live Demo: [https://ragworks-chatbot.vercel.app](https://ragworks-chatbot.vercel.app)
 
-## Key Features
-**User Authentication**: Secure user registration and login using JWT (JSON Web Tokens).
+A Retrieval-Augmented Generation (RAG) chatbot with secure authentication, document uploads, vector search, and streaming AI responses.
 
-**Persistent Sessions**: User sessions are maintained across browser refreshes using client-side storage.
+RAGWorks lets users upload documents, embed text into a vector database, and chat with an AI assistant that answers questions using the uploaded content as context.
 
-**Document Ingestion**: Users can upload PDF documents, which are processed and stored in a vector database.
+---
 
-**Conversational AI**: A chatbot interface powered by Google's Gemini-Pro model and LangChain for context-aware responses.
+## ✨ Features
 
-**Data Isolation**: Each user's uploaded documents are stored in a private, dedicated vector database collection to ensure security and privacy.
+- ✅ **User authentication** (Register, Login, Logout)
+- ✅ **JWT-protected routes & protected WebSocket**
+- ✅ **Document upload & ingestion** (multiple files)
+- ✅ **Vector store** (Qdrant / Chroma)
+- ✅ **Streaming AI responses** via WebSockets
+- ✅ **Persistent conversations** with history
+- ✅ **Conversation sidebar** for quick navigation
+- ✅ **Production-ready** (deployment notes included)
 
-## Tech Stack
-**Backend**: FastAPI (Python) for building a high-performance, asynchronous API.
+---
 
-**Frontend**: Streamlit (Python) for a clean, interactive, and easy-to-deploy user interface.
+## 🧰 Tech Stack
 
-**RAG Framework**: LangChain for orchestrating the RAG pipeline.
+**Frontend**
+- React (CRA/Vite)
+- Tailwind CSS
+- Context API for auth
+- WebSockets for streaming
 
-**LLM**: Google's Gemini-Pro for generating intelligent responses.
+**Backend**
+- FastAPI
+- Async SQLAlchemy + asyncpg
+- JWT authentication
+- Google GenAI (embeddings & LLM)
+- Qdrant (or Chroma) for vectors
 
-**Vector Database**: ChromaDB for storing and retrieving document embeddings.
+**Database & Hosting**
+- PostgreSQL (Neon)
+- Backend: Render
+- Frontend: Vercel
 
-**Database**: SQLite with SQLAlchemy for persistent user data and chat history.
+---
 
-## Setup and Installation
-### Prerequisites
-Python 3.8+
+## Application workflow
 
-A valid Google AI API key for Gemini.
+1. **Authenticate** — Client calls `/auth/register` or `/auth/login`; server returns a JWT which the client stores (Context/localStorage) and includes in Authorization headers and WebSocket tokens.
+2. **Upload & Ingest** — User uploads files (`/upload`) → server extracts text, chunks documents, computes embeddings (batch) and stores vectors with metadata in the vector DB (Qdrant). Ingestion can run as asynchronous/background jobs.
+3. **Embedding & Indexing** — Embeddings are generated using the configured embedding provider (Google GenAI), then upserted into the vector store with references to source files and conversation IDs.
+4. **Querying / Retrieval** — When a user asks a question, the client sends the query; server embeds the query and performs a top‑k similarity search on the vector store to fetch relevant text snippets.
+5. **Response Generation (RAG)** — Retrieved snippets are assembled into a prompt/context for the LLM; the LLM generates an answer which is streamed back to the client (WebSocket streaming at `/chat?token=...`).
+6. **Persistence & UI updates** — Streaming tokens are appended in the UI, final messages are saved to the `messages` table, and the conversation list is updated with the latest timestamp.
+7. **Optional feedback loop** — Users can provide feedback which may be stored and later used for retraining / relevance improvements.
 
-### Detailed Setup Process
-**Clone the repository and set up a virtual environment.**
+**Notes:**
+- REST endpoints: `/auth`, `/upload`, `/conversations`, `/conversations/:id/messages`.
+- WebSocket endpoint for streaming chat: `/chat?token=<jwt>`.
+- In production, restrict CORS and secure secrets (JWT, embedding keys).
 
-Start by cloning the project from your Git repository. Then, create a virtual environment to manage dependencies and activate it.
+---
 
-```
-git clone https://github.com/Mohammed-Ghayaz/ragworks_chatbot.git
-cd ragworks_chatbot
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-**Install the required Python packages.**
-
-You'll need to install all the libraries listed in the requirements.txt file. If this file doesn't exist yet, you can create it by running pip freeze > requirements.txt once all dependencies are installed.
-
-```
-pip install -r requirements.txt
-```
-
-**Configure your API key.**
-
-Create a file named .env in the root of your project directory and add your Google AI API key. This key is used by the Gemini model.
-
-```
-GOOGLE_API_KEY="your_api_key_here"
-SECRET_HASH_KEY="your_hash_key"
-DATABASE_URL="database_url"
-```
-
-This file should be added to your .gitignore to prevent it from being committed to your repository.
-
-**Create tables.**
-
-Before starting the application, run the `database.py` file to create tables
+## 📁 Project Structure
 
 ```
-python backend/ingest.py
+ragworks_chatbot/
+├── backend/
+│   ├── main.py
+│   ├── src/
+│   │   ├── api/         # routes
+│   │   ├── db/          # models & session
+│   │   ├── services/    # ingestion, embeddings, rag logic
+│   │   ├── utils/       # auth, helpers
+│   │   └── vectorstore/ # Qdrant client or other
+│   └── requirements.txt
+└── frontend/
+    ├── src/             # React app
+    ├── public/
+    └── package.json
 ```
 
-**Run the application.**
+---
 
-Open two separate terminal windows. In the first terminal, run the FastAPI backend. In the second, run the Streamlit frontend. This allows both services to run simultaneously.
+## 🔧 Environment Variables
 
-In the first terminal (for the backend):
+### Backend (.env)
 
-```
+| Name | Example | Description |
+|---|---|---|
+| DATABASE_URL | `postgresql+asyncpg://user:pass@host:port/db` | PostgreSQL connection string |
+| JWT_SECRET | `your_jwt_secret` | JWT signing secret |
+| JWT_EXPIRE_MINUTES | `60` | Token expiry (minutes) |
+| GOOGLE_API_KEY | `sk-...` | Google GenAI API key |
+| QDRANT_URL | `https://...` | Qdrant HTTP API URL |
+
+### Frontend (.env)
+
+> Create React App requires env vars prefixed with `REACT_APP_` for them to be available in the browser.
+
+- `REACT_APP_BACKEND_URL` or `REACT_APP_API_BASE` — e.g. `https://your-backend-url.onrender.com`
+
+---
+
+## 🧪 Run Locally
+
+### Backend (development)
+
+**Windows (PowerShell):**
+```powershell
 cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-In the second terminal (for the frontend):
-
+**macOS / Linux:**
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
+
+- API: `http://localhost:8000`
+- Swagger docs: `http://localhost:8000/docs`
+
+### Frontend (development)
+
+```bash
 cd frontend
-streamlit run app.py
+npm install
+npm start
 ```
 
-The application should now be running in your browser at http://localhost:8501.
+- UI: `http://localhost:3000`
 
-## Usage
-**Register a New User**: On the main page, navigate to the "Register" tab to create a new account.
+> If you change env variables, restart the dev server so CRA/Vite picks them up.
 
-**Login**: Use your newly created credentials to log in. Your session will persist even if you refresh the page.
+---
 
-**Upload a Document**: Use the file uploader to add a new PDF. This will create a new, isolated conversation, and the chatbot will be ready to answer questions about the document.
+## 🗂 Database (core tables overview)
 
-**Start Chatting**: Ask questions related to the content of your uploaded document. The RAG chatbot will provide a streaming, context-aware response.
+- **users**: `user_id (uuid)`, `name`, `email`, `password_hash`
+- **conversations**: `conversation_id (uuid)`, `user_id`, `created_at`
+- **messages**: `message_id`, `conversation_id`, `role` (`user`/`ai`), `content`, `created_at`
+- **vector store**: stored in Qdrant or configured vector database
 
-## Note
+---
 
-When you navigate to the previous chat, it collects all the infomation related to that particular conversation, and you can continue to chat. But, the frontend might not display the previous chat.
+## 🔐 Security
+
+- JWT-based authentication
+- Password hashing (bcrypt / argon2)
+- CORS configured; restrict origins in production
+- WebSocket endpoints protected by token
+
+---
+
+## 🌍 Deployment
+
+**Backend (Render)**
+- Build: `pip install -r requirements.txt`
+- Start: `uvicorn main:app --host 0.0.0.0 --port 10000`
+
+**Frontend (Vercel)**
+- Build: `npm run build`
+- Deploy path: `build/` or Vercel auto-detect
+
+---
+
+## 🛠 Roadmap
+
+- Support more file types (PDF, images, Office docs)
+- Role-based admin panel
+- Collaborative spaces & chat tagging
+- Fine-tuned long-term memory
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open issues or submit pull requests. Include tests and a brief description of changes.
+
+---
+
+## 🧪 Tests
+
+Run backend tests (if added):
+```bash
+pytest
+```
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## 👤 Author
+
+**Mohammed Ghayaz**
+
+[LinkedIn | Mohammed Ghayaz](https://www.linkedin.com/in/mohammed-ghayaz/)
+
+[GitHub | Mohammed Ghayaz](https://github.com/Mohammed-Ghayaz)
