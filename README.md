@@ -51,7 +51,6 @@ RAGWorks lets users upload documents, embed text into a vector database, and cha
 4. **Querying / Retrieval** — When a user asks a question, the client sends the query; server embeds the query and performs a top‑k similarity search on the vector store to fetch relevant text snippets.
 5. **Response Generation (RAG)** — Retrieved snippets are assembled into a prompt/context for the LLM; the LLM generates an answer which is streamed back to the client (WebSocket streaming at `/chat?token=...`).
 6. **Persistence & UI updates** — Streaming tokens are appended in the UI, final messages are saved to the `messages` table, and the conversation list is updated with the latest timestamp.
-7. **Optional feedback loop** — Users can provide feedback which may be stored and later used for retraining / relevance improvements.
 
 **Notes:**
 - REST endpoints: `/auth`, `/upload`, `/conversations`, `/conversations/:id/messages`.
